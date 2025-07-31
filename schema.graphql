@@ -1,0 +1,270 @@
+# Live Orderbook and Market Microstructure Schema
+# Focuses on real-time market state and microstructure analytics
+
+# Core Market Entity
+type Market @entity {
+  id: ID!
+  conditionId: Bytes!
+  marketId: String!
+  question: String
+  description: String
+  endDate: BigInt
+  resolutionSource: String
+  outcomeSlotCount: BigInt!
+  outcomes: [Outcome!]! @derivedFrom(field: "market")
+  
+  # Live Orderbook State
+  orderbook: OrderBook!
+  
+  # Market Microstructure Metrics
+  spread: Spread!
+  marketDepth: MarketDepth!
+  orderFlow: OrderFlow!
+  
+  # Historical Data
+  totalVolume: BigInt!
+  totalTrades: BigInt!
+  lastTradePrice: BigInt
+  lastTradeTimestamp: BigInt
+  
+  # Metadata
+  createdAt: BigInt!
+  updatedAt: BigInt!
+}
+
+# Market Outcomes
+type Outcome @entity {
+  id: ID!
+  market: Market!
+  outcomeIndex: BigInt!
+  name: String
+  description: String
+  
+  # Live Pricing
+  currentBid: BigInt
+  currentAsk: BigInt
+  lastTradePrice: BigInt
+  volume24h: BigInt
+  
+  # Orderbook Depth
+  bidDepth: [PriceLevel!]! @derivedFrom(field: "outcome")
+  askDepth: [PriceLevel!]! @derivedFrom(field: "outcome")
+}
+
+# Live Orderbook State
+type OrderBook @entity {
+  id: ID!
+  market: Market!
+  
+  # Best Prices
+  bestBid: BigInt
+  bestAsk: BigInt
+  spread: BigInt
+  spreadPercentage: BigDecimal
+  
+  # Market Depth
+  totalBidDepth: BigInt
+  totalAskDepth: BigInt
+  bidDepthLevels: Int!
+  askDepthLevels: Int!
+  
+  # Active Orders
+  activeOrders: [Order!]! @derivedFrom(field: "orderbook")
+  
+  # Timestamps
+  lastUpdate: BigInt!
+  createdAt: BigInt!
+}
+
+# Individual Orders (Active and Historical)
+type Order @entity {
+  id: ID!
+  orderHash: Bytes!
+  orderbook: OrderBook!
+  market: Market!
+  outcome: Outcome!
+  
+  # Order Details
+  maker: Bytes!
+  taker: Bytes
+  side: OrderSide!
+  price: BigInt!
+  size: BigInt!
+  remainingSize: BigInt!
+  
+  # Order State
+  status: OrderStatus!
+  filledSize: BigInt!
+  cancelledSize: BigInt!
+  
+  # Timestamps
+  createdAt: BigInt!
+  filledAt: BigInt
+  cancelledAt: BigInt
+  expiresAt: BigInt
+  
+  # Events
+  fills: [OrderFill!]! @derivedFrom(field: "order")
+  cancellations: [OrderCancellation!]! @derivedFrom(field: "order")
+}
+
+# Order Fills
+type OrderFill @entity(immutable: true) {
+  id: ID!
+  order: Order!
+  market: Market!
+  outcome: Outcome!
+  
+  # Fill Details
+  maker: Bytes!
+  taker: Bytes!
+  price: BigInt!
+  size: BigInt!
+  fee: BigInt!
+  
+  # Timestamps
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: Bytes!
+}
+
+# Order Cancellations
+type OrderCancellation @entity(immutable: true) {
+  id: ID!
+  order: Order!
+  market: Market!
+  outcome: Outcome!
+  
+  # Cancellation Details
+  cancelledSize: BigInt!
+  reason: String
+  
+  # Timestamps
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: Bytes!
+}
+
+# Price Levels for Market Depth
+type PriceLevel @entity {
+  id: ID!
+  outcome: Outcome!
+  market: Market!
+  price: BigInt!
+  side: OrderSide!
+  
+  # Depth at this price
+  totalSize: BigInt!
+  orderCount: Int!
+  
+  # Timestamps
+  lastUpdate: BigInt!
+}
+
+# Real-time Spread Analytics
+type Spread @entity {
+  id: ID!
+  market: Market!
+  
+  # Current Spread
+  currentSpread: BigInt!
+  currentSpreadPercentage: BigDecimal!
+  
+  # Spread History
+  minSpread: BigInt!
+  maxSpread: BigInt!
+  avgSpread: BigDecimal!
+  
+  # Spread Volatility
+  spreadVolatility: BigDecimal!
+  
+  # Timestamps
+  lastUpdate: BigInt!
+  createdAt: BigInt!
+}
+
+# Market Depth Analytics
+type MarketDepth @entity {
+  id: ID!
+  market: Market!
+  
+  # Depth Metrics
+  totalBidDepth: BigInt!
+  totalAskDepth: BigInt!
+  depthImbalance: BigDecimal!
+  
+  # Depth at Different Levels
+  depthAt1Percent: BigInt!
+  depthAt5Percent: BigInt!
+  depthAt10Percent: BigInt!
+  
+  # Liquidity Metrics
+  bidLiquidity: BigDecimal!
+  askLiquidity: BigDecimal!
+  
+  # Timestamps
+  lastUpdate: BigInt!
+  createdAt: BigInt!
+}
+
+# Order Flow Analytics
+type OrderFlow @entity {
+  id: ID!
+  market: Market!
+  
+  # Flow Metrics
+  buyFlow: BigInt!
+  sellFlow: BigInt!
+  netFlow: BigInt!
+  
+  # Flow Ratios
+  buySellRatio: BigDecimal!
+  orderFlowImbalance: BigDecimal!
+  
+  # Time-based Flow
+  flow1Min: BigInt!
+  flow5Min: BigInt!
+  flow15Min: BigInt!
+  
+  # Timestamps
+  lastUpdate: BigInt!
+  createdAt: BigInt!
+}
+
+# Market Microstructure Events
+type MarketMicrostructureEvent @entity(immutable: true) {
+  id: ID!
+  market: Market!
+  eventType: MicrostructureEventType!
+  
+  # Event Data
+  data: String!
+  
+  # Timestamps
+  timestamp: BigInt!
+  blockNumber: BigInt!
+  transactionHash: Bytes!
+}
+
+# Enums
+enum OrderSide {
+  BUY
+  SELL
+}
+
+enum OrderStatus {
+  ACTIVE
+  FILLED
+  CANCELLED
+  EXPIRED
+  PARTIALLY_FILLED
+}
+
+enum MicrostructureEventType {
+  SPREAD_WIDENING
+  SPREAD_NARROWING
+  DEPTH_IMBALANCE
+  ORDER_FLOW_SURGE
+  LIQUIDITY_DRAIN
+  PRICE_IMPACT
+}
