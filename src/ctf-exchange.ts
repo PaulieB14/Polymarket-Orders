@@ -11,7 +11,6 @@ import {
   Order,
   OrderFill,
   OrderCancellation,
-  PriceLevel,
   Spread,
   MarketDepth,
   OrderFlow,
@@ -24,12 +23,12 @@ function getOrCreateMarket(marketId: string): Market {
   let market = Market.load(marketId)
   if (!market) {
     market = new Market(marketId)
-    // For new marketId format (tx hash + log index), use a default conditionId
+    // Use the marketId as conditionId if it's a valid hex string
     let conditionId: Bytes
-    if (marketId == "0" || marketId == "") {
-      conditionId = Bytes.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000")
+    if (marketId.startsWith("0x") && marketId.length == 66) {
+      conditionId = Bytes.fromHexString(marketId)
     } else {
-      // Use default conditionId for safety
+      // Fallback to default conditionId for safety
       conditionId = Bytes.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000")
     }
     market.conditionId = conditionId
@@ -99,7 +98,8 @@ function getOrCreateMarket(marketId: string): Market {
 }
 
 export function handleOrderFilled(event: OrderFilledEvent): void {
-  let marketId = event.params.makerAssetId.toString()
+  // Create a more meaningful marketId from the asset IDs
+  let marketId = event.params.makerAssetId.toString() + "-" + event.params.takerAssetId.toString()
   let market = getOrCreateMarket(marketId)
   
   // Create order fill record
@@ -126,14 +126,7 @@ export function handleOrderFilled(event: OrderFilledEvent): void {
   market.updatedAt = event.block.timestamp
   market.save()
   
-  // Update order book state (simplified)
-  let orderbook = OrderBook.load(marketId)
-  if (orderbook) {
-    orderbook.lastUpdate = event.block.timestamp
-    orderbook.save()
-  }
-  
-  // Update order flow analytics (simplified)
+  // Update order flow analytics
   let orderFlow = OrderFlow.load(marketId)
   if (orderFlow) {
     orderFlow.buyFlow = orderFlow.buyFlow.plus(event.params.takerAmountFilled)
@@ -167,7 +160,8 @@ export function handleOrderCancelled(event: OrderCancelledEvent): void {
 }
 
 export function handleOrdersMatched(event: OrdersMatchedEvent): void {
-  let marketId = event.params.makerAssetId.toString()
+  // Create a more meaningful marketId from the asset IDs
+  let marketId = event.params.makerAssetId.toString() + "-" + event.params.takerAssetId.toString()
   let market = getOrCreateMarket(marketId)
   
   // Update market statistics
@@ -176,11 +170,11 @@ export function handleOrdersMatched(event: OrdersMatchedEvent): void {
   market.updatedAt = event.block.timestamp
   market.save()
   
-  // Update order flow analytics
+  // Update order flow analytics (enhanced)
   let orderFlow = OrderFlow.load(marketId)
   if (orderFlow) {
-    orderFlow.buyFlow = orderFlow.buyFlow.plus(event.params.makerAmountFilled)
-    orderFlow.netFlow = orderFlow.netFlow.plus(event.params.makerAmountFilled)
+    orderFlow.sellFlow = orderFlow.sellFlow.plus(event.params.makerAmountFilled)
+    orderFlow.netFlow = orderFlow.netFlow.minus(event.params.makerAmountFilled)
     orderFlow.lastUpdate = event.block.timestamp
     orderFlow.save()
   }
@@ -188,8 +182,8 @@ export function handleOrdersMatched(event: OrdersMatchedEvent): void {
 
 export function handleTokenRegistered(event: TokenRegisteredEvent): void {
   let conditionId = event.params.conditionId
-  // Use a safer approach - create marketId from transaction hash and log index
-  let marketId = event.transaction.hash.toHexString() + "-" + event.logIndex.toString()
+  // Use conditionId as marketId for proper market identification
+  let marketId = conditionId.toHexString()
   let market = getOrCreateMarket(marketId)
   
   // Update market metadata

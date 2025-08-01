@@ -20,6 +20,7 @@ export function handleConditionPreparation(event: ConditionPreparationEvent): vo
     market.outcomeSlotCount = BigInt.fromI32(2) // Default to 2 outcomes
     market.totalVolume = BigInt.fromI32(0)
     market.totalTrades = BigInt.fromI32(0)
+    market.endDate = event.params.endTime // Map endTime to endDate
     market.createdAt = event.block.timestamp
     market.updatedAt = event.block.timestamp
     market.save()

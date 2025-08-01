@@ -23,14 +23,8 @@ function getOrCreateMarket(marketId: string): Market {
   let market = Market.load(marketId)
   if (!market) {
     market = new Market(marketId)
-    // For new marketId format (tx hash + log index), use a default conditionId
-    let conditionId: Bytes
-    if (marketId == "0" || marketId == "") {
-      conditionId = Bytes.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000")
-    } else {
-      // Use default conditionId for safety
-      conditionId = Bytes.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000")
-    }
+    // Always use default conditionId for safety
+    let conditionId = Bytes.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000")
     market.conditionId = conditionId
     market.marketId = marketId
     market.outcomeSlotCount = BigInt.fromI32(2)
@@ -168,11 +162,11 @@ export function handleOrdersMatched(event: OrdersMatchedEvent): void {
   market.updatedAt = event.block.timestamp
   market.save()
   
-  // Update order flow analytics
+  // Update order flow analytics (enhanced)
   let orderFlow = OrderFlow.load(marketId)
   if (orderFlow) {
-    orderFlow.buyFlow = orderFlow.buyFlow.plus(event.params.makerAmountFilled)
-    orderFlow.netFlow = orderFlow.netFlow.plus(event.params.makerAmountFilled)
+    orderFlow.sellFlow = orderFlow.sellFlow.plus(event.params.makerAmountFilled)
+    orderFlow.netFlow = orderFlow.netFlow.minus(event.params.makerAmountFilled)
     orderFlow.lastUpdate = event.block.timestamp
     orderFlow.save()
   }
