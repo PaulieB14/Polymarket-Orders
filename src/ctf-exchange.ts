@@ -19,12 +19,14 @@ import {
 import { BigInt, BigDecimal, Bytes } from "@graphprotocol/graph-ts"
 
 // Helper function to get or create market
-function getOrCreateMarket(conditionId: string): Market {
-  let market = Market.load(conditionId)
+function getOrCreateMarket(marketId: string): Market {
+  let market = Market.load(marketId)
   if (!market) {
-    market = new Market(conditionId)
-    market.conditionId = Bytes.fromHexString(conditionId)
-    market.marketId = conditionId
+    market = new Market(marketId)
+    // Convert BigInt string to proper hex string for conditionId
+    let hexString = BigInt.fromString(marketId).toHexString()
+    market.conditionId = Bytes.fromHexString(hexString)
+    market.marketId = marketId
     market.outcomeSlotCount = BigInt.fromI32(2)
     market.totalVolume = BigInt.fromI32(0)
     market.totalTrades = BigInt.fromI32(0)
@@ -33,8 +35,8 @@ function getOrCreateMarket(conditionId: string): Market {
     market.save()
     
     // Create orderbook
-    let orderbook = new OrderBook(conditionId)
-    orderbook.market = conditionId
+    let orderbook = new OrderBook(marketId)
+    orderbook.marketId = marketId
     orderbook.bidDepthLevels = 0
     orderbook.askDepthLevels = 0
     orderbook.totalBidDepth = BigInt.fromI32(0)
@@ -44,8 +46,8 @@ function getOrCreateMarket(conditionId: string): Market {
     orderbook.save()
     
     // Create spread tracking
-    let spread = new Spread(conditionId)
-    spread.market = conditionId
+    let spread = new Spread(marketId)
+    spread.marketId = marketId
     spread.currentSpread = BigInt.fromI32(0)
     spread.currentSpreadPercentage = BigDecimal.fromString("0")
     spread.minSpread = BigInt.fromI32(0)
@@ -57,8 +59,8 @@ function getOrCreateMarket(conditionId: string): Market {
     spread.save()
     
     // Create market depth tracking
-    let marketDepth = new MarketDepth(conditionId)
-    marketDepth.market = conditionId
+    let marketDepth = new MarketDepth(marketId)
+    marketDepth.marketId = marketId
     marketDepth.totalBidDepth = BigInt.fromI32(0)
     marketDepth.totalAskDepth = BigInt.fromI32(0)
     marketDepth.depthImbalance = BigDecimal.fromString("0")
@@ -72,8 +74,8 @@ function getOrCreateMarket(conditionId: string): Market {
     marketDepth.save()
     
     // Create order flow tracking
-    let orderFlow = new OrderFlow(conditionId)
-    orderFlow.market = conditionId
+    let orderFlow = new OrderFlow(marketId)
+    orderFlow.marketId = marketId
     orderFlow.buyFlow = BigInt.fromI32(0)
     orderFlow.sellFlow = BigInt.fromI32(0)
     orderFlow.netFlow = BigInt.fromI32(0)
@@ -97,8 +99,8 @@ export function handleOrderFilled(event: OrderFilledEvent): void {
   let fillId = event.transaction.hash.toHexString() + "-" + event.logIndex.toString()
   let fill = new OrderFill(fillId)
   fill.order = event.params.orderHash.toHexString()
-  fill.market = marketId
-  fill.outcome = marketId + "-0"
+  fill.marketId = marketId
+  fill.outcomeIndex = BigInt.fromI32(0)
   fill.maker = event.params.maker
   fill.taker = event.params.taker
   fill.price = event.params.makerAmountFilled
@@ -140,8 +142,8 @@ export function handleOrderCancelled(event: OrderCancelledEvent): void {
     let cancellationId = event.transaction.hash.toHexString() + "-" + event.logIndex.toString()
     let cancellation = new OrderCancellation(cancellationId)
     cancellation.order = orderId
-    cancellation.market = order.market
-    cancellation.outcome = order.outcome
+    cancellation.marketId = order.marketId
+    cancellation.outcomeIndex = order.outcomeIndex
     cancellation.cancelledSize = order.remainingSize
     cancellation.timestamp = event.block.timestamp
     cancellation.blockNumber = event.block.number
@@ -171,8 +173,9 @@ export function handleOrdersMatched(event: OrdersMatchedEvent): void {
 }
 
 export function handleTokenRegistered(event: TokenRegisteredEvent): void {
-  let conditionId = event.params.conditionId.toHexString()
-  let market = getOrCreateMarket(conditionId)
+  let conditionId = event.params.conditionId
+  let marketId = conditionId.toHexString()
+  let market = getOrCreateMarket(marketId)
   
   // Update market metadata
   market.outcomeSlotCount = BigInt.fromI32(2)

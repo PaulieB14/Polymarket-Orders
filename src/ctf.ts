@@ -1,44 +1,38 @@
-// CTF Contract mapping for market metadata and condition tracking
 import {
-  ConditionPreparation,
-  ConditionResolution,
+  ConditionPreparation as ConditionPreparationEvent,
+  ConditionResolution as ConditionResolutionEvent,
 } from "../generated/CTF/CTF"
 import {
   Market,
   Outcome,
 } from "../generated/schema"
-import { BigInt } from "@graphprotocol/graph-ts"
+import { BigInt, Bytes } from "@graphprotocol/graph-ts"
 
-export function handleConditionPreparation(event: ConditionPreparation): void {
-  let conditionId = event.params.conditionId.toHexString()
-  let market = Market.load(conditionId)
+export function handleConditionPreparation(event: ConditionPreparationEvent): void {
+  let conditionId = event.params.conditionId
+  let marketId = conditionId.toHexString()
   
-  if (market) {
-    // Update market with preparation data
-    market.endDate = event.params.endTime
+  let market = Market.load(marketId)
+  if (!market) {
+    market = new Market(marketId)
+    market.conditionId = conditionId
+    market.marketId = marketId
+    market.outcomeSlotCount = BigInt.fromI32(2) // Default to 2 outcomes
+    market.totalVolume = BigInt.fromI32(0)
+    market.totalTrades = BigInt.fromI32(0)
+    market.createdAt = event.block.timestamp
     market.updatedAt = event.block.timestamp
     market.save()
   }
 }
 
-export function handleConditionResolution(event: ConditionResolution): void {
-  let conditionId = event.params.conditionId.toHexString()
-  let market = Market.load(conditionId)
+export function handleConditionResolution(event: ConditionResolutionEvent): void {
+  let conditionId = event.params.conditionId
+  let marketId = conditionId.toHexString()
   
+  let market = Market.load(marketId)
   if (market) {
-    // Update market with resolution data
-    // This could include the winning outcome, resolution source, etc.
     market.updatedAt = event.block.timestamp
     market.save()
-    
-    // Update the winning outcome
-    let winningOutcomeIndex = event.params.outcomeSlotCount
-    let outcomeId = conditionId + "-" + winningOutcomeIndex.toString()
-    let outcome = Outcome.load(outcomeId)
-    
-    if (outcome) {
-      // Mark this outcome as the winning one
-      outcome.save()
-    }
   }
 }

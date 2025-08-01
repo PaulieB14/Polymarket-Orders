@@ -9,8 +9,8 @@ dataSources:
     network: matic
     source:
       address: "0x4bfb41d5b3570defd03c39a9a4d8de6bd8b8982e"
-      abi: CTFExchange
       startBlock: 33605403
+      abi: CTFExchange
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -46,8 +46,8 @@ dataSources:
     network: matic
     source:
       address: "0xC5d563A36AE78145C45a50134d48A1215220f80a"
+      startBlock: 50505492
       abi: CTFExchange
-      startBlock: 33605403
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
@@ -83,8 +83,8 @@ dataSources:
     network: matic
     source:
       address: "0x4D97DCd97eC945f40cF65F87097ACe5EA0476045"
+      startBlock: 4023686
       abi: CTF
-      startBlock: 33605403
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7

@@ -13,10 +13,13 @@ type Market @entity {
   outcomeSlotCount: BigInt!
   outcomes: [Outcome!]! @derivedFrom(field: "market")
   
+  # Live Orderbook State
+  orderbook: OrderBook!
+  
   # Market Microstructure Metrics
-  spread: Spread
-  marketDepth: MarketDepth
-  orderFlow: OrderFlow
+  spread: Spread!
+  marketDepth: MarketDepth!
+  orderFlow: OrderFlow!
   
   # Historical Data
   totalVolume: BigInt!
@@ -51,7 +54,7 @@ type Outcome @entity {
 # Live Orderbook State
 type OrderBook @entity {
   id: ID!
-  marketId: String!
+  market: Market!
   
   # Best Prices
   bestBid: BigInt
@@ -78,8 +81,8 @@ type Order @entity {
   id: ID!
   orderHash: Bytes!
   orderbook: OrderBook!
-  marketId: String!
-  outcomeIndex: BigInt!
+  market: Market!
+  outcome: Outcome!
   
   # Order Details
   maker: Bytes!
@@ -109,8 +112,8 @@ type Order @entity {
 type OrderFill @entity(immutable: true) {
   id: ID!
   order: Order!
-  marketId: String!
-  outcomeIndex: BigInt!
+  market: Market!
+  outcome: Outcome!
   
   # Fill Details
   maker: Bytes!
@@ -129,8 +132,8 @@ type OrderFill @entity(immutable: true) {
 type OrderCancellation @entity(immutable: true) {
   id: ID!
   order: Order!
-  marketId: String!
-  outcomeIndex: BigInt!
+  market: Market!
+  outcome: Outcome!
   
   # Cancellation Details
   cancelledSize: BigInt!
@@ -146,7 +149,7 @@ type OrderCancellation @entity(immutable: true) {
 type PriceLevel @entity {
   id: ID!
   outcome: Outcome!
-  marketId: String!
+  market: Market!
   price: BigInt!
   side: OrderSide!
   
@@ -161,7 +164,7 @@ type PriceLevel @entity {
 # Real-time Spread Analytics
 type Spread @entity {
   id: ID!
-  marketId: String!
+  market: Market!
   
   # Current Spread
   currentSpread: BigInt!
@@ -183,7 +186,7 @@ type Spread @entity {
 # Market Depth Analytics
 type MarketDepth @entity {
   id: ID!
-  marketId: String!
+  market: Market!
   
   # Depth Metrics
   totalBidDepth: BigInt!
@@ -207,7 +210,7 @@ type MarketDepth @entity {
 # Order Flow Analytics
 type OrderFlow @entity {
   id: ID!
-  marketId: String!
+  market: Market!
   
   # Flow Metrics
   buyFlow: BigInt!
@@ -231,7 +234,7 @@ type OrderFlow @entity {
 # Market Microstructure Events
 type MarketMicrostructureEvent @entity(immutable: true) {
   id: ID!
-  marketId: String!
+  market: Market!
   eventType: MicrostructureEventType!
   
   # Event Data
