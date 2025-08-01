@@ -23,9 +23,15 @@ function getOrCreateMarket(marketId: string): Market {
   let market = Market.load(marketId)
   if (!market) {
     market = new Market(marketId)
-    // Convert BigInt string to proper hex string for conditionId
-    let hexString = BigInt.fromString(marketId).toHexString()
-    market.conditionId = Bytes.fromHexString(hexString)
+    // For new marketId format (tx hash + log index), use a default conditionId
+    let conditionId: Bytes
+    if (marketId == "0" || marketId == "") {
+      conditionId = Bytes.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000")
+    } else {
+      // Use default conditionId for safety
+      conditionId = Bytes.fromHexString("0x0000000000000000000000000000000000000000000000000000000000000000")
+    }
+    market.conditionId = conditionId
     market.marketId = marketId
     market.outcomeSlotCount = BigInt.fromI32(2)
     market.totalVolume = BigInt.fromI32(0)
@@ -174,7 +180,8 @@ export function handleOrdersMatched(event: OrdersMatchedEvent): void {
 
 export function handleTokenRegistered(event: TokenRegisteredEvent): void {
   let conditionId = event.params.conditionId
-  let marketId = conditionId.toHexString()
+  // Use a safer approach - create marketId from transaction hash and log index
+  let marketId = event.transaction.hash.toHexString() + "-" + event.logIndex.toString()
   let market = getOrCreateMarket(marketId)
   
   // Update market metadata
