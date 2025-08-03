@@ -6,9 +6,9 @@ dataSources:
     name: Polymarket
     network: polygon
     source:
-      address: "0x5177B16fF5F4E7E8C5C2C4C4C4C4C4C4C4C4C4C4C"  # CTF Exchange contract - UPDATE THIS
+      address: "0x6A9D222616C90FcA5754cd1333cFD9b7fb6a4F74"  # Current UMA CTF Adapter V2
       abi: Polymarket
-      startBlock: 12345678  # Replace with actual start block
+      startBlock: 40000000  # Approximate start block - verify this
     mapping:
       kind: ethereum/events
       apiVersion: 0.0.7
