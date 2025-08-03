@@ -1,88 +1,10 @@
-# Generic
-
-type Global @entity {
-  "ID is empty string, this is a singleton"
+type MarketData @entity {
+  "ERC1155 TokenID of the CTF Asset"
   id: ID!
-  numConditions: Int!
-  numOpenConditions: Int!
-  numClosedConditions: Int!
-
-  "Number of unique traders interacting with Polymarket"
-  numTraders: BigInt!
-
-  "Number of trades of any kind for all market makers"
-  tradesQuantity: BigInt!
-  "Number of purchases of shares from any market maker"
-  buysQuantity: BigInt!
-  "Number of sales of shares to any market maker"
-  sellsQuantity: BigInt!
-
-  "Global volume in USDC base units"
-  collateralVolume: BigInt!
-  "Global volume in USDC scaled by 10^6"
-  scaledCollateralVolume: BigDecimal!
-  "Global fees in USDC base units"
-  collateralFees: BigInt!
-  "Global fees in USDC scaled by 10^6"
-  scaledCollateralFees: BigDecimal!
-
-  "Global volume of share purchases in USDC base units"
-  collateralBuyVolume: BigInt!
-  "Global volume of share purchases in USDC scaled by 10^6"
-  scaledCollateralBuyVolume: BigDecimal!
-  "Global volume of share sales in USDC base units"
-  collateralSellVolume: BigInt!
-  "Global volume of share sales in USDC scaled by 10^6"
-  scaledCollateralSellVolume: BigDecimal!
-}
-
-type Account @entity {
-  "User address"
-  id: ID!
-  "Timestamp at which account first interacted with Polymarket"
-  creationTimestamp: BigInt!
-  "Timestamp at which account most recently interacted with Polymarket"
-  lastSeenTimestamp: BigInt!
-  "Total volume of this user's trades in USDC base units"
-  collateralVolume: BigInt!
-  "Total number of trades performed by this user"
-  numTrades: BigInt!
-  "Total volume of this user's trades in USDC scaled by 10^6"
-  scaledCollateralVolume: BigDecimal!
-  "Timestamp of last Buy or Sell transaction"
-  lastTradedTimestamp: BigInt!
-  "Profit generated from fpmm and orderbook trades, merges and redemptions"
-  profit: BigInt!
-  "Realized profit in USDC scaled by 10^6"
-  scaledProfit: BigDecimal!
-}
-
-type Collateral @entity {
-  "Token address"
-  id: ID!
-  name: String!
-  symbol: String!
-  decimals: Int!
-}
-
-# Conditional Tokens
-
-type Condition @entity {
-  id: ID!
-  "Address which can resolve this condition"
-  oracle: Bytes!
-  "Question ID which corresponds to this condition"
-  questionId: Bytes!
-  "Number of possible outcomes for this condition"
-  outcomeSlotCount: Int!
-  "Timestamp at which this condition was resolved"
-  resolutionTimestamp: BigInt
-  "Fraction of collateral assigned to each outcome"
-  payouts: [BigDecimal!]
-  payoutNumerators: [BigInt!]
-  payoutDenominator: BigInt
-  "Hash of the resolution transaction"
-  resolutionHash: Bytes
+  "Condition that the token is linked to"
+  condition: String!
+  "Outcome Index, may not be present if an FPMM is not created"
+  outcomeIndex: BigInt
 }
 
 # Exchange OrderFilled event stored directly
@@ -95,8 +17,8 @@ type OrderFilledEvent @entity {
   timestamp: BigInt!
   orderHash: Bytes!
   "Addresses of the maker and the taker"
-  maker: Account!
-  taker: Account!
+  maker: String!
+  taker: String!
   "Maker assetId"
   makerAssetId: String!
   "Taker assetId"
@@ -107,32 +29,32 @@ type OrderFilledEvent @entity {
   takerAmountFilled: BigInt!
   "Fee paid by the order maker"
   fee: BigInt!
-}
-
-# Enriched OrderFilled event with price, size and side added
-type EnrichedOrderFilled @entity {
-  "Transaction hash + Order hash"
-  id: ID!
-  "Transaction hash"
-  transactionHash: Bytes!
-  "Timestamp at which transaction occurred"
-  timestamp: BigInt!
-  "Addresses of the maker and the taker"
-  maker: Account!
-  taker: Account!
-  "Order hash"
-  orderHash: Bytes!
-  "Market/CTF Token ID which the transaction is interacting with"
-  market: Orderbook!
-  "Buy or Sell transaction"
-  side: TradeType!
-  "Amount of collateral in trade"
-  size: BigInt!
-  "Price of the conditional token"
+  "Block number"
+  blockNumber: BigInt!
+  "Trade side (buy/sell)"
+  side: String!
+  "Price in collateral terms"
   price: BigDecimal!
 }
 
-# Collection of EnrichedOrderFilled trades
+# Exchange OrdersMatched event stored directly
+type OrdersMatchedEvent @entity {
+  "Transaction Hash"
+  id: ID!
+  "Timestamp at which filled occurred"
+  timestamp: BigInt!
+  "Maker asset Id"
+  makerAssetID: BigInt!
+  "Taker asset Id"
+  takerAssetID: BigInt!
+  "Maker amount filled"
+  makerAmountFilled: BigInt!
+  "Taker amount filled"
+  takerAmountFilled: BigInt!
+  "Block number"
+  blockNumber: BigInt!
+}
+
 type Orderbook @entity {
   "Token Id"
   id: ID!
@@ -154,8 +76,12 @@ type Orderbook @entity {
   collateralSellVolume: BigInt!
   "Global volume of share sales in USDC scaled by 10^6"
   scaledCollateralSellVolume: BigDecimal!
-  "Timestamp of last day during which someone made a trade"
+  "Last active day (timestamp / 86400)"
   lastActiveDay: BigInt!
+  "Average trade size"
+  averageTradeSize: BigDecimal!
+  "Total fees collected"
+  totalFees: BigInt!
 }
 
 # Exchange: all trades aggregated
@@ -183,9 +109,47 @@ type OrdersMatchedGlobal @entity {
   collateralSellVolume: BigDecimal!
   "Global volume of share sales in USDC scaled by 10^6"
   scaledCollateralSellVolume: BigDecimal!
+  
+  "Total fees collected globally"
+  totalFees: BigInt!
+  "Average trade size globally"
+  averageTradeSize: BigDecimal!
 }
 
-enum TradeType {
-  Buy
-  Sell
+# Enhanced Global Stats (improvement over official)
+type Global @entity {
+  "ID is empty string, this is a singleton"
+  id: ID!
+  "Total number of trades"
+  tradesQuantity: BigInt!
+  "Total volume in collateral"
+  collateralVolume: BigInt!
+  "Total volume scaled"
+  scaledCollateralVolume: BigDecimal!
+  "Total fees collected"
+  collateralFees: BigInt!
+  "Total fees scaled"
+  scaledCollateralFees: BigDecimal!
+  "Number of unique traders"
+  uniqueTraders: BigInt!
+  "Number of active markets"
+  activeMarkets: BigInt!
 }
+
+# Account tracking (enhancement)
+type Account @entity {
+  "Account address"
+  id: ID!
+  "Total trades by this account"
+  tradesQuantity: BigInt!
+  "Total volume traded"
+  totalVolume: BigInt!
+  "Total fees paid"
+  totalFees: BigInt!
+  "First trade timestamp"
+  firstTrade: BigInt!
+  "Last trade timestamp"
+  lastTrade: BigInt!
+  "Is this account active"
+  isActive: Boolean!
+} 

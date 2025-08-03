@@ -1,0 +1,38 @@
+tests:
+  - name: OrderFilled
+    handler: handleOrderFilled
+    event: OrderFilled
+    data:
+      maker: "0x1234567890123456789012345678901234567890"
+      taker: "0x0987654321098765432109876543210987654321"
+      orderHash: "0x1234567890123456789012345678901234567890123456789012345678901234"
+      makerAssetId: "1"
+      takerAssetId: "2"
+      makerAmountFilled: "1000000"
+      takerAmountFilled: "1000000"
+      fee: "10000"
+    block:
+      number: 40000001
+      timestamp: 1640995200
+    expectedEntities:
+      - entity: Global
+        count: 1
+      - entity: OrderFilledEvent
+        count: 1
+      - entity: Orderbook
+        count: 1
+
+  - name: OrdersMatched
+    handler: handleOrdersMatched
+    event: OrdersMatched
+    data:
+      makerAssetId: "1"
+      takerAssetId: "2"
+      makerAmountFilled: "1000000"
+      takerAmountFilled: "1000000"
+    block:
+      number: 40000002
+      timestamp: 1640995260
+    expectedEntities:
+      - entity: OrdersMatchedGlobal
+        count: 1 

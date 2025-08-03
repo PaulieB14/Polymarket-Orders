@@ -1,0 +1,47 @@
+version: '3'
+services:
+  graph-node:
+    image: graphprotocol/graph-node:latest
+    ports:
+      - '8000:8000'
+      - '8001:8001'
+      - '8020:8020'
+      - '8030:8030'
+      - '8040:8040'
+    depends_on:
+      - ipfs
+      - postgres
+    environment:
+      postgres_host: postgres
+      postgres_user: graph-node
+      postgres_pass: let-me-in
+      postgres_db: graph-node
+      ipfs: 'ipfs:5001'
+      ethereum: 'matic:https://polygon-rpc.com'
+      GRAPH_LOG: info
+      RUST_LOG: info
+      GRAPH_NODE_ID: 'graph-node1'
+      GRAPH_NODE_ETHEREUM_POLLING_INTERVAL: 1000
+      GRAPH_NODE_ETHEREUM_HEAD_BLOCK_QUEUE_CAPACITY: 1000
+    volumes:
+      - ./data:/data
+
+  ipfs:
+    image: ipfs/kubo:latest
+    ports:
+      - '5001:5001'
+    volumes:
+      - ./data/ipfs:/data/ipfs
+    command: ["ipfs", "config", "--json", "API.HTTPHeaders.Access-Control-Allow-Origin", '["*"]']
+
+  postgres:
+    image: postgres:13
+    ports:
+      - '5432:5432'
+    command: ["postgres", "-cshared_preload_libraries=pg_stat_statements"]
+    environment:
+      POSTGRES_USER: graph-node
+      POSTGRES_PASSWORD: let-me-in
+      POSTGRES_DB: graph-node
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data 

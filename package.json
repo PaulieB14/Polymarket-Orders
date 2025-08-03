@@ -1,21 +1,54 @@
 {
   "name": "polymarket-orders-fixed",
   "version": "1.0.0",
-  "description": "Fixed Polymarket Orders subgraph with correct contract addresses and event handlers",
+  "description": "Enhanced Polymarket Orders subgraph with professional tooling and comprehensive indexing",
   "scripts": {
     "codegen": "graph codegen",
     "build": "graph build",
     "deploy": "graph deploy --node https://api.studio.thegraph.com/deploy/",
+    "deploy:goldsky": "goldsky subgraph deploy polymarket-orders-fixed/v1.0.0 --path ./build/",
     "create-local": "graph create --node http://localhost:8020/ polymarket-orders-fixed",
     "remove-local": "graph remove --node http://localhost:8020/ polymarket-orders-fixed",
-    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 polymarket-orders-fixed"
+    "deploy-local": "graph deploy --node http://localhost:8020/ --ipfs http://localhost:5001 polymarket-orders-fixed",
+    "test": "echo 'Tests not configured yet'",
+    "test:watch": "echo 'Tests not configured yet'",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
+    "clean": "rm -rf build/ generated/",
+    "prepare": "npm run clean && npm run codegen && npm run build",
+    "dev": "npm run codegen && npm run build && npm run deploy-local",
+    "studio": "npm run codegen && npm run build && npm run deploy"
   },
   "devDependencies": {
     "@graphprotocol/graph-cli": "^0.60.0",
-    "@graphprotocol/graph-ts": "^0.31.0"
+    "@graphprotocol/graph-ts": "^0.31.0",
+    "@typescript-eslint/eslint-plugin": "^5.0.0",
+    "@typescript-eslint/parser": "^5.0.0",
+    "eslint": "^8.0.0",
+    "prettier": "^2.8.0"
   },
   "dependencies": {
     "babel-polyfill": "^6.26.0",
     "babel-register": "^6.26.0"
-  }
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/polymarket-orders-fixed.git"
+  },
+  "keywords": [
+    "polymarket",
+    "subgraph",
+    "thegraph",
+    "ethereum",
+    "polygon",
+    "defi",
+    "prediction-markets"
+  ],
+  "author": "Your Name",
+  "license": "LGPL-3.0"
 }

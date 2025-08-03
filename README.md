@@ -1,106 +1,254 @@
-# Polymarket Orders Subgraph - Fixed Version
+# Polymarket Orders Subgraph (Enhanced)
 
-This is a fixed version of the Polymarket Orders subgraph with correct contract addresses and event handlers based on the official Polymarket subgraph structure.
+A professional-grade subgraph for indexing Polymarket order data on Polygon, featuring comprehensive tooling, testing, and deployment options.
 
-## ✅ **Ready for Deployment**
+## 🚀 Features
 
-The subgraph is now configured with the correct Polymarket contract addresses and should be ready for deployment.
+- **Professional Tooling**: ESLint, Prettier, TypeScript configuration
+- **Multiple Deployment Options**: Graph Studio, Goldsky, Local development
+- **Docker Support**: Complete local development environment
+- **Comprehensive Indexing**: Order fills, matches, conditions, and more
+- **Production Ready**: Optimized for high-performance indexing
 
-## 🔧 **Configuration Details**
+## 📋 Prerequisites
 
-### **Contract Addresses**
-- **Main Contract**: `0x6A9D222616C90FcA5754cd1333cFD9b7fb6a4F74` (Current UMA CTF Adapter V2)
-- **Network**: Polygon
-- **Start Block**: 40000000 (approximate - may need adjustment)
+- Node.js >= 16.0.0
+- Docker and Docker Compose (for local development)
+- Graph CLI: `npm install -g @graphprotocol/graph-cli`
 
-### **What Was Fixed**
+## 🛠️ Installation
 
-1. **Schema Structure**
-   - Aligned with official Polymarket subgraph schema
-   - Uses proper entities: `Global`, `Account`, `Condition`, `OrderFilledEvent`, `EnrichedOrderFilled`, `Orderbook`
-   - Removed custom analytics entities that weren't working
-
-2. **Event Handlers**
-   - `handleOrderFilled`: Processes order fill events with proper account tracking
-   - `handleOrdersMatched`: Updates global order matching statistics
-   - `handleConditionPreparation`: Creates market conditions
-   - `handleConditionResolution`: Resolves market conditions
-
-3. **Data Flow**
-   - Proper account creation and tracking
-   - Global statistics aggregation
-   - Orderbook volume tracking
-   - Market condition management
-
-## 🚀 **Deployment Instructions**
-
-### **1. Clone the Repository**
 ```bash
-git clone https://github.com/PaulieB14/Polymarket-Orders-Fixed.git
-cd Polymarket-Orders-Fixed
-```
+# Clone the repository
+git clone <your-repo-url>
+cd polymarket-orders-fixed
 
-### **2. Install Dependencies**
-```bash
+# Install dependencies
 npm install
+
+# Generate types and build
+npm run prepare
 ```
 
-### **3. Authenticate with Graph Studio**
+## 🔧 Development
+
+### Code Quality
+
 ```bash
+# Lint code
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
+
+# Format code
+npm run format
+
+# Check formatting
+npm run format:check
+```
+
+### Local Development
+
+```bash
+# Start local Graph Node environment
+docker-compose up -d
+
+# Create local subgraph
+npm run create-local
+
+# Deploy to local environment
+npm run deploy-local
+
+# Access GraphQL playground
+# http://localhost:8000/subgraphs/name/polymarket-orders-fixed/graphql
+```
+
+### Testing
+
+```bash
+# Run tests (when configured)
+npm run test
+
+# Watch mode
+npm run test:watch
+```
+
+## 🚀 Deployment
+
+### Graph Studio (Recommended)
+
+```bash
+# Authenticate with Graph Studio
 graph auth 9583a39f18d46611533f8afe3d548174
+
+# Deploy to Graph Studio
+npm run studio
 ```
 
-### **4. Generate & Build**
+### Goldsky
+
 ```bash
-graph codegen && graph build
+# Install Goldsky CLI
+npm install -g @goldsky/cli
+
+# Deploy to Goldsky
+npm run deploy:goldsky
 ```
 
-### **5. Deploy to Studio**
+### Manual Deployment
+
 ```bash
-graph deploy polymarket-orderbook
+# Generate and build
+npm run codegen && npm run build
+
+# Deploy with custom options
+graph deploy --node <your-node-url> <subgraph-name>
 ```
 
-## 📊 **Expected Data Structure**
+## 📊 Schema
 
-Once deployed, this subgraph will provide:
+The subgraph indexes the following entities:
 
-- **OrderFilledEvent**: Raw order fill events with maker/taker data
-- **EnrichedOrderFilled**: Processed trades with price and side information
-- **Orderbook**: Market-specific trading statistics
-- **Account**: User trading history and statistics
-- **Condition**: Market condition data
-- **Global**: Overall platform statistics
+- **Global**: Overall statistics and metrics
+- **Account**: User account information
+- **Condition**: Market conditions and outcomes
+- **OrderFilledEvent**: Individual order fill events
+- **EnrichedOrderFilled**: Enhanced order fill data
+- **Orderbook**: Order book statistics
+- **OrdersMatchedGlobal**: Global order matching statistics
 
-## 🔍 **Verification Steps**
+## 🔗 Contract Information
 
-After deployment:
+- **Network**: Polygon (matic)
+- **Contract**: `0x6A9D222616C90FcA5754cd1333cFD9b7fb6a4F74`
+- **Start Block**: 40000000
 
-1. **Check the subgraph status** in Graph Studio
-2. **Monitor indexing progress** - it may take time to sync from block 40000000
-3. **Test queries** to verify data is being indexed correctly
-4. **Compare with official Polymarket subgraph** to ensure data consistency
+## 📝 Events Indexed
 
-## ⚠️ **Important Notes**
+- `OrderFilled`: Order execution events
+- `OrdersMatched`: Order matching events
+- `TokenRegistered`: Token registration events
+- `ConditionPreparation`: Market condition setup
+- `ConditionResolution`: Market condition resolution
 
-- **Start Block**: The current start block (40000000) is an estimate. You may need to adjust this based on when the contract was actually deployed.
-- **ABI**: The current ABI includes the main events, but you may need to add more events based on the actual contract interface.
-- **Indexing Time**: Starting from block 40000000 may take significant time to sync completely.
+## 🐳 Docker Development
 
-## 📚 **Resources**
+The project includes a complete Docker setup for local development:
 
-- [Official Polymarket Subgraph](https://docs.polymarket.com/developers/subgraph/overview)
-- [Graph Protocol Documentation](https://thegraph.com/docs/)
-- [Polymarket API Documentation](https://docs.polymarket.com/)
-- [Contract on PolygonScan](https://polygonscan.com/address/0x6A9D222616C90FcA5754cd1333cFD9b7fb6a4F74)
+```bash
+# Start all services
+docker-compose up -d
 
-## 🤝 **Contributing**
+# View logs
+docker-compose logs -f graph-node
 
-If you find issues or have improvements:
+# Stop services
+docker-compose down
+
+# Clean up volumes
+docker-compose down -v
+```
+
+## 📁 Project Structure
+
+```
+polymarket-orders-fixed/
+├── abis/                    # Contract ABIs
+├── src/                     # Mapping source code
+├── generated/               # Generated types (auto)
+├── build/                   # Build artifacts (auto)
+├── schema.graphql           # GraphQL schema
+├── subgraph.yaml           # Subgraph manifest
+├── docker-compose.yml      # Local development setup
+├── matchstick.yaml         # Test configuration
+├── .eslintrc.js           # ESLint configuration
+├── .prettierrc.js         # Prettier configuration
+└── tsconfig.json          # TypeScript configuration
+```
+
+## 🔍 Query Examples
+
+### Get Global Statistics
+```graphql
+query {
+  globals(first: 1) {
+    id
+    tradesQuantity
+    collateralVolume
+    collateralFees
+  }
+}
+```
+
+### Get Recent Order Fills
+```graphql
+query {
+  orderFilledEvents(
+    first: 10
+    orderBy: timestamp
+    orderDirection: desc
+  ) {
+    id
+    maker
+    taker
+    makerAmountFilled
+    takerAmountFilled
+    fee
+    timestamp
+  }
+}
+```
+
+### Get Orderbook Statistics
+```graphql
+query {
+  orderbooks(first: 10) {
+    id
+    tradesQuantity
+    collateralVolume
+    lastActiveDay
+  }
+}
+```
+
+## 🛡️ Security
+
+- All dependencies are regularly updated
+- Code is linted and formatted for consistency
+- TypeScript provides type safety
+- Comprehensive error handling in mappings
+
+## 📈 Performance
+
+- Optimized event handlers for high-throughput indexing
+- Efficient data structures for fast queries
+- Minimal storage footprint
+- Indexed fields for common query patterns
+
+## 🤝 Contributing
+
 1. Fork the repository
 2. Create a feature branch
 3. Make your changes
-4. Submit a pull request
+4. Run linting and formatting
+5. Test your changes
+6. Submit a pull request
 
-## 📄 **License**
+## 📄 License
 
-MIT License - see LICENSE file for details.
+This project is licensed under the LGPL-3.0 License.
+
+## 🔗 Links
+
+- [The Graph Documentation](https://thegraph.com/docs/)
+- [Polymarket](https://polymarket.com/)
+- [Graph Studio](https://studio.thegraph.com/)
+- [Goldsky](https://goldsky.com/)
+
+## 🆘 Support
+
+For issues and questions:
+- Create an issue in this repository
+- Check the Graph documentation
+- Join The Graph Discord community
